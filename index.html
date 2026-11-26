@@ -3,109 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>現場カレンダー</title>
+<title>搬入出等予定</title>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales-all.global.min.js"></script>
 <style>
-  html, body { margin:0; height:100%; font-family:"Meiryo","Hiragino Sans",sans-serif; background:#f4f6f8; }
-  #wrap { display:flex; flex-direction:column; height:100vh; padding:12px; box-sizing:border-box; }
-  #header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-  #header h1 { margin:0; font-size:28px; color:#1f3a5f; }
-  #updated { font-size:16px; color:#555; }
-  #calendar { flex:1; background:#fff; border-radius:8px; padding:8px; }
-  /* タッチ操作向けに大きめ */
-  .fc .fc-button { font-size:20px; padding:8px 18px; }
-  .fc .fc-toolbar-title { font-size:30px; }
-  .fc .fc-daygrid-day-number { font-size:18px; }
-  .fc .fc-event { font-size:16px; padding:2px 4px; cursor:pointer; }
-  .fc .fc-day-sun .fc-daygrid-day-number, .fc .fc-col-header-cell.fc-day-sun { color:#d33; }
-  .fc .fc-day-sat .fc-daygrid-day-number, .fc .fc-col-header-cell.fc-day-sat { color:#2468c8; }
+  /* ===== 見た目の設定（ここを触ると見え方が変わります） ===== */
+  :root{
+    --base-font: "BIZ UDPGothic","Meiryo","Hiragino Sans",sans-serif;
+    --title-size: 30px;      /* 画面タイトル */
+    --event-size: 15px;      /* 予定の文字 */
+    --button-size: 20px;     /* ボタンの文字 */
+    --header-bg: #404040;    /* 曜日の帯の色（Excelと同じ濃いグレー） */
+  }
+  html,body{margin:0;height:100%;font-family:var(--base-font);background:#f4f6f8;}
+  #wrap{display:flex;flex-direction:column;height:100vh;padding:10px 14px;box-sizing:border-box;}
+  #header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
+  #header h1{margin:0;font-size:var(--title-size);color:#1f1f1f;}
+  #legend{display:flex;gap:10px;flex-wrap:wrap;}
+  .chip{padding:4px 14px;border-radius:6px;font-weight:bold;font-size:17px;border:2px solid;}
+  #updated{font-size:15px;color:#555;}
+  #calendar{flex:1;min-height:0;background:#fff;border-radius:8px;padding:8px;}
+
+  .fc .fc-button{font-size:var(--button-size);padding:6px 18px;}
+  .fc .fc-toolbar-title{font-size:28px;font-weight:bold;}
+  .fc .fc-col-header-cell{background:var(--header-bg);}
+  .fc .fc-col-header-cell a{color:#fff;font-size:18px;padding:4px 0;}
+  .fc .fc-col-header-cell.fc-day-sat a{color:#9cc3ff;}
+  .fc .fc-col-header-cell.fc-day-sun a{color:#ff9c9c;}
+  .fc .fc-daygrid-day-number{font-size:17px;}
+  .fc .fc-day-sat .fc-daygrid-day-number{color:#2468c8;}
+  .fc .fc-day-sun .fc-daygrid-day-number{color:#d33;}
+  .fc .fc-day-today{background:#fff8d6 !important;}
+  .fc .fc-timegrid-slot{height:2.2em;}
+  .fc .fc-timegrid-slot-label{font-size:15px;}
+  .fc .fc-event{font-size:var(--event-size);font-weight:bold;border-width:0 0 0 5px;cursor:pointer;}
+  .ev{padding:2px 4px;line-height:1.3;overflow:hidden;}
+  .ev .t{font-size:.9em;}
+  .ev .d{font-weight:normal;font-size:.9em;}
+
   /* 詳細ポップアップ */
-  #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); align-items:center; justify-content:center; z-index:999; }
-  #modal .box { background:#fff; border-radius:12px; padding:28px 36px; min-width:420px; font-size:22px; line-height:1.8; }
-  #modal .box h2 { margin:0 0 12px; font-size:26px; }
-  #modal button { margin-top:16px; font-size:22px; padding:10px 30px; }
+  #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center;z-index:999;}
+  #modal .box{background:#fff;border-radius:12px;padding:26px 34px;min-width:min(460px,90vw);font-size:22px;line-height:1.8;border-top:10px solid #999;}
+  #modal h2{margin:0 0 10px;font-size:26px;}
+  #modal button{margin-top:14px;font-size:22px;padding:10px 30px;}
 </style>
 </head>
 <body>
 <div id="wrap">
   <div id="header">
-    <h1>現場カレンダー</h1>
+    <h1>搬入出等予定</h1>
+    <div id="legend"></div>
     <div id="updated"></div>
   </div>
   <div id="calendar"></div>
 </div>
 
-<div id="modal" onclick="closeModal()">
-  <div class="box" onclick="event.stopPropagation()">
+<div id="modal">
+  <div class="box" id="m-box">
     <h2 id="m-title"></h2>
     <div id="m-body"></div>
-    <button onclick="closeModal()">閉じる</button>
+    <button type="button" id="m-close">閉じる</button>
   </div>
 </div>
 
 <script>
-// ===== 設定 =====
+// ===== 動きの設定 =====
 const DATA_URL = "data/events.json";
-const REFRESH_MINUTES = 5;        // 何分ごとにデータを読み直すか
-const PAGE_RELOAD_HOURS = 6;      // 画面ごと再読み込み（固まり防止）
+const REFRESH_MINUTES = 5;     // データを読み直す間隔（分）
+const PAGE_RELOAD_HOURS = 6;   // 画面ごと再読み込み（固まり防止）
+const BACK_TO_TODAY_MIN = 3;   // 操作がないとき、今日の表示に戻るまで（分）
+const SHOW_WEEKEND = false;    // 土日を表示するなら true
 
-// 現場名ごとの色（未登録は自動で割り当て）
-const COLORS = ["#2e86de","#e67e22","#27ae60","#8e44ad","#c0392b","#16a085","#d35400","#2c3e50"];
-const colorMap = {};
-function colorOf(key){
-  if(!key) return "#7f8c8d";
-  if(!colorMap[key]) colorMap[key] = COLORS[Object.keys(colorMap).length % COLORS.length];
-  return colorMap[key];
-}
+let latest = null;
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hm = d => d.toLocaleTimeString("ja-JP",{hour:"numeric",minute:"2-digit"});
 
 async function loadEvents(info, success, failure){
   try{
     const res = await fetch(DATA_URL + "?t=" + Date.now(), {cache:"no-store"});
-    const data = await res.json();
-    document.getElementById("updated").textContent = "最終更新：" + (data.updated || "-");
-    success(data.events.map(e => ({
-      title: e.title,
-      start: e.start,
-      end: e.end,           // 終日イベントの end は「翌日」（変換スクリプト側で調整済み）
-      allDay: true,
-      color: colorOf(e.site),
+    latest = await res.json();
+    document.getElementById("updated").textContent = "最終更新：" + (latest.updated || "-");
+    // 凡例（現場ごとの色）
+    document.getElementById("legend").innerHTML = (latest.sites || []).map(s =>
+      `<span class="chip" style="color:${s.text};background:${s.bg};border-color:${s.text}">${esc(s.name)}</span>`).join("");
+    // Excelの「表示開始・表示終了」を週表示の時間軸に使う
+    if (latest.slotMin) calendar.setOption("slotMinTime", latest.slotMin);
+    if (latest.slotMax) calendar.setOption("slotMaxTime", latest.slotMax);
+    success(latest.events.map(e => ({
+      start: e.start, end: e.end,
+      title: e.company,
+      backgroundColor: e.bgColor, borderColor: e.textColor, textColor: e.textColor,
       extendedProps: e
     })));
-  }catch(err){
-    console.error(err);
-    failure(err);
-  }
+  }catch(err){ console.error(err); failure(err); }
 }
 
 const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
-  initialView: "dayGridMonth",
   locale: "ja",
   height: "100%",
-  headerToolbar: { left:"prev", center:"title", right:"today next" },
-  buttonText: { today:"今月" },
-  dayMaxEvents: 4,                 // 多い日は「+他◯件」
+  initialView: "timeGridWeek",          // 最初は週表示。月から始めるなら "dayGridMonth"
+  weekends: SHOW_WEEKEND,
+  firstDay: 1,                           // 月曜はじまり
+  headerToolbar: { left:"prev,next today", center:"title", right:"timeGridWeek,dayGridMonth" },
+  buttonText: { today:"今日", week:"週", month:"月" },
+  allDaySlot: false,
+  slotMinTime: "07:00:00",
+  slotMaxTime: "18:00:00",
+  slotDuration: "00:30:00",
+  slotLabelFormat: { hour:"numeric", minute:"2-digit", hour12:false },
+  nowIndicator: true,
+  expandRows: true,
+  eventMaxStack: 3,                      // 週表示：重なりが多いときは「+他◯件」
+  dayMaxEvents: 4,                       // 月表示：1日に出す件数
+  views: {
+    timeGridWeek: { dayHeaderFormat: { month:"numeric", day:"numeric", weekday:"short" } },
+    dayGridMonth: { displayEventEnd: true }
+  },
   events: loadEvents,
+
+  // 予定の帯に出す文字
+  eventContent: (arg) => {
+    const p = arg.event.extendedProps;
+    const time = `${hm(arg.event.start)}～${arg.event.end ? hm(arg.event.end) : ""}`;
+    if (arg.view.type === "dayGridMonth") {
+      return { html: `<div class="ev">${hm(arg.event.start)}～ ${esc(p.company)}</div>` };
+    }
+    return { html: `<div class="ev"><div class="t">${time}</div><div>${esc(p.company)}</div><div class="d">${esc(p.detail)}</div></div>` };
+  },
+
+  // タップで詳細
   eventClick: (info) => {
     const p = info.event.extendedProps;
-    document.getElementById("m-title").textContent = info.event.title;
+    document.getElementById("m-box").style.borderTopColor = p.textColor;
+    document.getElementById("m-title").textContent = p.company;
     document.getElementById("m-body").innerHTML =
-      `期間：${p.start}${p.end_display && p.end_display !== p.start ? " ～ " + p.end_display : ""}<br>` +
-      `現場：${p.site || "-"}<br>` +
-      `業者：${p.company || "-"}<br>` +
-      `内容：${p.detail || "-"}`;
+      `日時：${info.event.start.toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"})}　${hm(info.event.start)}～${info.event.end ? hm(info.event.end) : ""}<br>` +
+      `現場：${esc(p.site)}　区分：${esc(p.kubun)}<br>` +
+      `内容：${esc(p.detail) || "-"}` + (p.note ? `<br>備考：${esc(p.note)}` : "");
     document.getElementById("modal").style.display = "flex";
+    touched();
   }
 });
 calendar.render();
 
+// ポップアップを閉じる
 function closeModal(){ document.getElementById("modal").style.display = "none"; }
+document.getElementById("m-close").addEventListener("click", closeModal);
+document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
 
-// 定期更新
+// しばらく触られなければ、今日の週表示に戻す
+let idleTimer;
+function touched(){
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    closeModal();
+    calendar.changeView("timeGridWeek");
+    calendar.today();
+  }, BACK_TO_TODAY_MIN * 60 * 1000);
+}
+document.addEventListener("pointerdown", touched);
+touched();
+
 setInterval(() => calendar.refetchEvents(), REFRESH_MINUTES * 60 * 1000);
 setTimeout(() => location.reload(), PAGE_RELOAD_HOURS * 60 * 60 * 1000);
-// 詳細を開きっぱなしにしない（60秒で自動クローズ）
-setInterval(closeModal, 60 * 1000);
 </script>
 </body>
 </html>

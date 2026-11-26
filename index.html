@@ -154,6 +154,7 @@ const SHOW_WEEKEND = false;           // 土日も表示するなら true（週�
 
 const SLOT_MINUTES = 30;              // 週表示の1行あたりの分数（30分きざみ）
 const LUNCH = ["12:00", "13:00"];     // 昼休みとしてグレーにする時間帯（不要なら [] にする）
+const LUNCH_HEIGHT = 30;              // 昼休みの行の高さ（30なら30分ぶん、60なら縮めない）
 const SHOW_TIME_IN_EVENT = false;     // 週表示の帯の中に「8:00～12:00」も出すなら true
 const MONTH_MAX = 4;                  // 月表示：1日に出す件数（超えたら「+他◯件」）
 
@@ -213,8 +214,16 @@ function renderWeek(){
   // 表示する時間帯（Excelの「表示開始」「表示終了」。なければ 8:00～17:00）
   const tMin = toMin((DATA.slotMin || "08:00").slice(0, 5));
   const tMax = toMin((DATA.slotMax || "17:00").slice(0, 5));
-  const span = tMax - tMin;
-  const slots = Math.max(1, Math.ceil(span / SLOT_MINUTES));
+
+  // 【昼休みを縮めて表示するための計算】
+  const lS = LUNCH.length === 2 ? toMin(LUNCH[0]) : -1;   // 昼休みの開始（分）
+  const lE = LUNCH.length === 2 ? toMin(LUNCH[1]) : -1;   // 昼休みの終了（分）
+  const lRate = lE > lS ? LUNCH_HEIGHT / (lE - lS) : 1;   // 縮める割合（60分を30分の高さ → 0.5）
+  const w = x => {                                        // 表示開始からの「見た目上の分数」
+    const inLunch = Math.max(0, Math.min(x, lE) - Math.max(tMin, lS));
+    return (x - tMin) - inLunch + inLunch * lRate;
+  };
+  const pos = x => w(x) / w(tMax) * 100;                  // 画面上の位置（上から何％か）
 
   // 表示する日（月曜はじまり）
   const mon = new Date(baseDate); mon.setHours(0,0,0,0);
@@ -245,15 +254,22 @@ function renderWeek(){
     html += `<div class="cell-head cell-area ${i === 0 ? "day-start" : ""}">${esc(a)}</div>`;
   }));
 
-  // 背景の行（30分ごと）を作る
+  // 背景の行（30分ごと。昼休みは1行にまとめて低くする）
   const slotRows = (withLabel) => {
     let s = "";
-    for (let i = 0; i < slots; i++){
-      const m = tMin + i * SLOT_MINUTES;
-      const hourEnd = (m + SLOT_MINUTES) % 60 === 0 ? " hour-end" : "";
-      const lunch = LUNCH.length === 2 && m >= toMin(LUNCH[0]) && m < toMin(LUNCH[1]) ? " lunch" : "";
+    let m = tMin;
+    while (m < tMax){
+      let next = Math.min(m + SLOT_MINUTES, tMax);
+      let lunch = "";
+      if (m === lS){                                       // 昼休みの開始なら、終了までを1行にする
+        next = lE;
+        lunch = withLabel ? "" : " lunch";
+      }
+      const hourEnd = next % 60 === 0 ? " hour-end" : "";
       const label = withLabel && m % 60 === 0 ? minToHM(m) : "";
-      s += `<div class="slot${hourEnd}${withLabel ? "" : lunch}">${label}</div>`;
+      const grow = (w(next) - w(m)) / SLOT_MINUTES;        // 行の高さ（30分の行＝1）
+      s += `<div class="slot${hourEnd}${lunch}" style="flex:${grow}">${label}</div>`;
+      m = next;
     }
     return s;
   };
@@ -281,16 +297,16 @@ function renderWeek(){
       if (en <= s) return;                                   // 表示時間外
       const div = document.createElement("div");
       div.className = "ev";
-      div.style.top = ((s - tMin) / span * 100) + "%";       // 開始位置
-      div.style.height = ((en - s) / span * 100) + "%";      // 長さ
+      div.style.top = pos(s) + "%";                          // 開始位置
+      div.style.height = (pos(en) - pos(s)) + "%";           // 長さ
       div.style.left = (lane / lanes * 100) + "%";           // 重なったときは横に並べる
       div.style.width = (100 / lanes) + "%";
       div.style.background = e.bgColor;
       div.style.color = e.textColor;
       div.style.borderLeftColor = e.textColor;
-      // ↓ 帯に出す文字（業者名＋内容）
+      // ↓ 帯に出す文字（内容のみ。業者名は月表示と詳細だけに出す）
       div.innerHTML = (SHOW_TIME_IN_EVENT ? `<div class="tm">${minToHM(e.sMin)}～${minToHM(e.eMin)}</div>` : "")
-                    + `${esc(e.company)}　${esc(e.detail)}`;
+                    + esc(e.detail);
       div.addEventListener("click", () => openModal(e));
       col.appendChild(div);
     });
@@ -300,7 +316,7 @@ function renderWeek(){
       if (nm >= tMin && nm <= tMax){
         const line = document.createElement("div");
         line.className = "now";
-        line.style.top = ((nm - tMin) / span * 100) + "%";
+        line.style.top = pos(nm) + "%";
         col.appendChild(line);
       }
     }

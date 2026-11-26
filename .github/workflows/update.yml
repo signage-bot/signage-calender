@@ -2,8 +2,8 @@ name: カレンダー更新
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # 30分おき（UTC基準。間隔指定なので時差は関係なし）
-  workflow_dispatch:          # 手動実行ボタン
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write

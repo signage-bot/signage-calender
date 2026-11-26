@@ -4,60 +4,134 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>搬入出等予定</title>
+
+<!-- ============================================================
+  【部品の読み込み】月表示で使うカレンダー部品（FullCalendar）
+  ※週表示（タイムライン）は下のプログラム部分で自作しているので、この部品は使いません
+============================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales-all.global.min.js"></script>
+
 <style>
-  /* ===== 見た目の設定（ここを触ると見え方が変わります） ===== */
-  :root{
-    --base-font: "BIZ UDPGothic","Meiryo","Hiragino Sans",sans-serif;
-    --title-size: 30px;      /* 画面タイトル */
-    --event-size: 15px;      /* 予定の文字 */
-    --button-size: 20px;     /* ボタンの文字 */
-    --header-bg: #404040;    /* 曜日の帯の色（Excelと同じ濃いグレー） */
-  }
-  html,body{margin:0;height:100%;font-family:var(--base-font);background:#f4f6f8;}
-  #wrap{display:flex;flex-direction:column;height:100vh;padding:10px 14px;box-sizing:border-box;}
-  #header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
-  #header h1{margin:0;font-size:var(--title-size);color:#1f1f1f;}
-  #legend{display:flex;gap:10px;flex-wrap:wrap;}
-  .chip{padding:4px 14px;border-radius:6px;font-weight:bold;font-size:17px;border:2px solid;}
-  #updated{font-size:15px;color:#555;}
-  #calendar{flex:1;min-height:0;background:#fff;border-radius:8px;padding:8px;}
+/* ============================================================
+  【見た目の設定】ここの数値や色を変えると、画面全体の見え方が変わります
+============================================================ */
+:root{
+  --font: "BIZ UDPGothic","Meiryo","Hiragino Sans",sans-serif; /* 文字の種類 */
+  --title-size: 28px;     /* 画面タイトル「搬入出等予定」の文字サイズ */
+  --date-size: 20px;      /* 週表示：日付見出し（11/26(木)）の文字サイズ */
+  --area-size: 16px;      /* 週表示：工区見出し（高層塔・救助塔 など）の文字サイズ */
+  --time-size: 16px;      /* 週表示：左端の時刻（8:00 など）の文字サイズ */
+  --event-size: 15px;     /* 予定の帯の文字サイズ */
+  --time-col: 64px;       /* 週表示：左端の時刻列の幅 */
 
-  .fc .fc-button{font-size:var(--button-size);padding:6px 18px;}
-  .fc .fc-toolbar-title{font-size:28px;font-weight:bold;}
-  .fc .fc-col-header-cell{background:var(--header-bg);}
-  .fc .fc-col-header-cell a{color:#fff;font-size:18px;padding:4px 0;}
-  .fc .fc-col-header-cell.fc-day-sat a{color:#9cc3ff;}
-  .fc .fc-col-header-cell.fc-day-sun a{color:#ff9c9c;}
-  .fc .fc-daygrid-day-number{font-size:17px;}
-  .fc .fc-day-sat .fc-daygrid-day-number{color:#2468c8;}
-  .fc .fc-day-sun .fc-daygrid-day-number{color:#d33;}
-  .fc .fc-day-today{background:#fff8d6 !important;}
-  .fc .fc-timegrid-slot{height:2.2em;}
-  .fc .fc-timegrid-slot-label{font-size:15px;}
-  .fc .fc-event{font-size:var(--event-size);font-weight:bold;border-width:0 0 0 5px;cursor:pointer;}
-  .ev{padding:2px 4px;line-height:1.3;overflow:hidden;}
-  .ev .t{font-size:.9em;}
-  .ev .d{font-weight:normal;font-size:.9em;}
+  --head-bg: #404040;     /* 見出し（日付・工区）の背景色 */
+  --head-fg: #ffffff;     /* 見出しの文字色 */
+  --line-hour: #777777;   /* 正時（8:00, 9:00…）の横線の色（実線） */
+  --line-half: #bbbbbb;   /* 30分の横線の色（点線） */
+  --line-day: #404040;    /* 日と日の区切り線の色（太線） */
+  --lunch-bg: #d9d9d9;    /* 昼休みの塗り色 */
+  --today-bg: #fff8d6;    /* 今日の列の塗り色 */
+}
 
-  /* 詳細ポップアップ */
-  #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center;z-index:999;}
-  #modal .box{background:#fff;border-radius:12px;padding:26px 34px;min-width:min(460px,90vw);font-size:22px;line-height:1.8;border-top:10px solid #999;}
-  #modal h2{margin:0 0 10px;font-size:26px;}
-  #modal button{margin-top:14px;font-size:22px;padding:10px 30px;}
+/* ---------- 画面全体の枠 ---------- */
+html,body{margin:0;height:100%;font-family:var(--font);background:#f4f6f8;color:#1f1f1f;}
+#wrap{display:flex;flex-direction:column;height:100vh;padding:8px 12px;box-sizing:border-box;gap:6px;}
+
+/* ---------- 上部（タイトル・凡例・最終更新） ---------- */
+#top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+#top h1{margin:0;font-size:var(--title-size);}
+#legend{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{padding:3px 12px;border-radius:6px;font-weight:bold;font-size:16px;border:2px solid;}
+#updated{margin-left:auto;font-size:14px;color:#555;}
+
+/* ---------- 操作ボタンの列（前へ・今日・次へ／週・月） ---------- */
+#toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#toolbar button{font-size:20px;padding:6px 18px;border:none;border-radius:6px;background:#2c3e50;color:#fff;cursor:pointer;}
+#toolbar button.on{background:#e67e22;}                 /* 選択中の「週」「月」ボタンの色 */
+#range{font-size:24px;font-weight:bold;margin:0 12px;}  /* 表示中の期間（2026年11月23日～27日 など） */
+#toolbar .right{margin-left:auto;display:flex;gap:8px;}
+
+/* ---------- 表示エリア ---------- */
+#view{flex:1;min-height:0;background:#fff;border-radius:8px;padding:6px;box-sizing:border-box;}
+#week,#month{height:100%;}
+
+/* ============================================================
+  【週表示（タイムライン）のレイアウト】
+  横：日付 × 工区 の列 ／ 縦：時刻（30分きざみ）
+============================================================ */
+#week{display:grid;grid-template-rows:auto auto 1fr;border:2px solid var(--line-day);box-sizing:border-box;}
+.cell-head{background:var(--head-bg);color:var(--head-fg);display:flex;align-items:center;justify-content:center;
+  border-left:1px solid #888;border-bottom:1px solid #888;text-align:center;padding:4px 2px;}
+.cell-date{font-size:var(--date-size);font-weight:bold;}   /* 1段目：日付 */
+.cell-area{font-size:var(--area-size);}                     /* 2段目：工区 */
+.cell-corner{font-size:15px;justify-content:flex-start;padding-left:6px;} /* 左上の「日付」「工区」 */
+.sat{color:#9cc3ff;} .sun{color:#ff9c9c;}                   /* 土日の見出しの文字色 */
+.day-start{border-left:3px solid var(--line-day) !important;} /* 日の区切りの太線 */
+
+/* 時刻列と、各列の背景（横線） */
+.col{position:relative;display:flex;flex-direction:column;border-left:1px solid #ccc;min-width:0;}
+.slot{flex:1;border-bottom:1px dashed var(--line-half);box-sizing:border-box;}  /* 30分の行（点線） */
+.slot.hour-end{border-bottom:1px solid var(--line-hour);}                       /* 正時の行（実線） */
+.slot.lunch{background:var(--lunch-bg);}                                         /* 昼休み */
+.col.today{background:var(--today-bg);}
+.timecol .slot{font-size:var(--time-size);text-align:right;padding-right:6px;font-weight:bold;
+  display:flex;align-items:flex-start;justify-content:flex-end;}
+
+/* 予定の帯 */
+.ev{position:absolute;box-sizing:border-box;padding:2px 4px;overflow:hidden;cursor:pointer;
+  font-size:var(--event-size);font-weight:bold;line-height:1.25;border-left:5px solid;border-radius:3px;
+  box-shadow:0 0 0 1px #fff;}
+.ev .tm{font-weight:normal;font-size:.85em;}
+/* 現在時刻の赤線 */
+.now{position:absolute;left:0;right:0;border-top:2px solid #e53935;z-index:5;pointer-events:none;}
+
+/* ---------- 月表示（FullCalendar）の見た目 ---------- */
+.fc .fc-col-header-cell{background:var(--head-bg);}
+.fc .fc-col-header-cell a{color:var(--head-fg);font-size:18px;}
+.fc .fc-daygrid-day-number{font-size:17px;}
+.fc .fc-day-sat .fc-daygrid-day-number{color:#2468c8;}
+.fc .fc-day-sun .fc-daygrid-day-number{color:#d33;}
+.fc .fc-day-today{background:var(--today-bg) !important;}
+.fc .fc-event{font-size:var(--event-size);font-weight:bold;cursor:pointer;}
+
+/* ---------- 詳細ポップアップ ---------- */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center;z-index:999;}
+#modal .box{background:#fff;border-radius:12px;padding:24px 32px;min-width:min(460px,90vw);font-size:22px;line-height:1.8;border-top:10px solid #999;}
+#modal h2{margin:0 0 8px;font-size:26px;}
+#modal button{margin-top:12px;font-size:22px;padding:10px 30px;}
 </style>
 </head>
+
 <body>
+<!-- ============================================================
+  【画面の骨組み】上から：タイトル行 → ボタン行 → 表示エリア
+============================================================ -->
 <div id="wrap">
-  <div id="header">
-    <h1>搬入出等予定</h1>
-    <div id="legend"></div>
-    <div id="updated"></div>
+  <div id="top">
+    <h1>搬入出等予定</h1>          <!-- ← 画面タイトル -->
+    <div id="legend"></div>        <!-- 現場ごとの色見本（自動で作られます） -->
+    <div id="updated"></div>       <!-- 最終更新の時刻（自動） -->
   </div>
-  <div id="calendar"></div>
+
+  <div id="toolbar">
+    <button type="button" id="b-prev">◀</button>
+    <button type="button" id="b-today">今日</button>
+    <button type="button" id="b-next">▶</button>
+    <span id="range"></span>
+    <div class="right">
+      <button type="button" id="b-week">週</button>
+      <button type="button" id="b-month">月</button>
+    </div>
+  </div>
+
+  <div id="view">
+    <div id="week"></div>                          <!-- 週表示（自作のタイムライン） -->
+    <div id="month" style="display:none"></div>    <!-- 月表示（FullCalendar） -->
+  </div>
 </div>
 
+<!-- 予定をタップしたときの詳細 -->
 <div id="modal">
   <div class="box" id="m-box">
     <h2 id="m-title"></h2>
@@ -67,104 +141,274 @@
 </div>
 
 <script>
-// ===== 動きの設定 =====
-const DATA_URL = "data/events.json";
-const REFRESH_MINUTES = 5;     // データを読み直す間隔（分）
-const PAGE_RELOAD_HOURS = 6;   // 画面ごと再読み込み（固まり防止）
-const BACK_TO_TODAY_MIN = 3;   // 操作がないとき、今日の表示に戻るまで（分）
-const SHOW_WEEKEND = false;    // 土日を表示するなら true
+/* ============================================================
+  【動きの設定】ここを書き換えると、表示内容や更新の動きが変わります
+============================================================ */
+const DATA_URL = "data/events.json";  // 予定データの場所（変更不要）
+const REFRESH_MINUTES = 5;            // 何分ごとにデータを読み直すか
+const PAGE_RELOAD_HOURS = 6;          // 何時間ごとに画面ごと再読み込みするか（固まり防止）
+const BACK_TO_TODAY_MIN = 3;          // 何分触らなければ「今週の週表示」に戻すか
+const SHOW_WEEKEND = false;           // 土日も表示するなら true
 
-let latest = null;
+const SLOT_MINUTES = 30;              // 週表示の1行あたりの分数（30分きざみ）
+const LUNCH = ["12:00", "13:00"];     // 昼休みとしてグレーにする時間帯（不要なら [] にする）
+const SHOW_TIME_IN_EVENT = false;     // 帯の中に「8:00～12:00」も出すなら true
+
+/* 【工区の列の設定】
+   name  … 見出しに出す名前
+   sites … その列に入れる現場名（Excelの「現場」列と同じ文字にする）
+   ここにない現場の予定は、自動で「その他」列に入ります */
+const AREAS = [
+  { name: "高層塔・救助塔", sites: ["高層塔", "救助塔"] },
+  { name: "風水害",         sites: ["風水害"] },
+];
+
+/* ============================================================
+  ここから下は仕組みの部分です（基本的に触らなくてOK）
+============================================================ */
+let EVENTS = [];               // 読み込んだ予定
+let DATA = {};                 // 読み込んだデータ全体（表示時間など）
+let mode = "week";             // 今の表示（"week" か "month"）
+let baseDate = new Date();     // 週表示で基準にしている日
+
+const $ = id => document.getElementById(id);
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const hm = d => d.toLocaleTimeString("ja-JP",{hour:"numeric",minute:"2-digit"});
+const toMin = s => { const [h, m] = String(s).split(":").map(Number); return h * 60 + (m || 0); };   // "8:30" → 510
+const minToHM = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`;                     // 510 → "8:30"
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const WD = ["日","月","火","水","木","金","土"];
 
-async function loadEvents(info, success, failure){
+/* ---------- データの読み込み ---------- */
+async function loadData(){
   try{
-    const res = await fetch(DATA_URL + "?t=" + Date.now(), {cache:"no-store"});
-    latest = await res.json();
-    document.getElementById("updated").textContent = "最終更新：" + (latest.updated || "-");
-    // 凡例（現場ごとの色）
-    document.getElementById("legend").innerHTML = (latest.sites || []).map(s =>
+    const res = await fetch(DATA_URL + "?t=" + Date.now(), { cache: "no-store" });
+    DATA = await res.json();
+    EVENTS = (DATA.events || []).map(e => ({
+      ...e,
+      date: e.start.slice(0, 10),        // "2026-11-26"
+      sMin: toMin(e.start.slice(11, 16)),// 開始（分）
+      eMin: toMin(e.end.slice(11, 16)),  // 終了（分）
+    }));
+    $("updated").textContent = "最終更新：" + (DATA.updated || "-");
+    $("legend").innerHTML = (DATA.sites || []).map(s =>
       `<span class="chip" style="color:${s.text};background:${s.bg};border-color:${s.text}">${esc(s.name)}</span>`).join("");
-    // Excelの「表示開始・表示終了」を週表示の時間軸に使う
-    if (latest.slotMin) calendar.setOption("slotMinTime", latest.slotMin);
-    if (latest.slotMax) calendar.setOption("slotMaxTime", latest.slotMax);
-    success(latest.events.map(e => ({
-      start: e.start, end: e.end,
-      title: e.company,
-      backgroundColor: e.bgColor, borderColor: e.textColor, textColor: e.textColor,
-      extendedProps: e
-    })));
-  }catch(err){ console.error(err); failure(err); }
+  }catch(err){
+    console.error(err);
+    $("updated").textContent = "データを読み込めませんでした";
+  }
+  render();
 }
 
-const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+/* ---------- 予定がどの工区の列に入るか ---------- */
+function areaIndex(site){
+  const i = AREAS.findIndex(a => a.sites.includes(site));
+  return i >= 0 ? i : AREAS.length;    // 見つからなければ「その他」
+}
+
+/* ---------- 週表示（タイムライン）を描く ---------- */
+function renderWeek(){
+  // 表示する時間帯（Excelの「表示開始」「表示終了」。なければ 8:00～17:00）
+  const tMin = toMin((DATA.slotMin || "08:00").slice(0, 5));
+  const tMax = toMin((DATA.slotMax || "17:00").slice(0, 5));
+  const span = tMax - tMin;
+  const slots = Math.max(1, Math.ceil(span / SLOT_MINUTES));
+
+  // 表示する日（月曜はじまり）
+  const mon = new Date(baseDate); mon.setHours(0,0,0,0);
+  mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+  const days = [];
+  for (let i = 0; i < (SHOW_WEEKEND ? 7 : 5); i++){ const d = new Date(mon); d.setDate(mon.getDate() + i); days.push(d); }
+
+  // 「その他」列が必要か
+  const areas = AREAS.map(a => a.name);
+  if (EVENTS.some(e => areaIndex(e.site) === AREAS.length)) areas.push("その他");
+
+  const nCols = days.length * areas.length;
+  const wk = $("week");
+  wk.style.gridTemplateColumns = `var(--time-col) repeat(${nCols}, minmax(0, 1fr))`;
+  const todayStr = ymd(new Date());
+  let html = "";
+
+  // 1段目：日付
+  html += `<div class="cell-head cell-corner">日付</div>`;
+  days.forEach(d => {
+    const cls = d.getDay() === 6 ? "sat" : d.getDay() === 0 ? "sun" : "";
+    html += `<div class="cell-head cell-date day-start ${cls}" style="grid-column: span ${areas.length}">${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})</div>`;
+  });
+
+  // 2段目：工区
+  html += `<div class="cell-head cell-corner">工区</div>`;
+  days.forEach(() => areas.forEach((a, i) => {
+    html += `<div class="cell-head cell-area ${i === 0 ? "day-start" : ""}">${esc(a)}</div>`;
+  }));
+
+  // 背景の行（30分ごと）を作る
+  const slotRows = (withLabel) => {
+    let s = "";
+    for (let i = 0; i < slots; i++){
+      const m = tMin + i * SLOT_MINUTES;
+      const next = m + SLOT_MINUTES;
+      const hourEnd = next % 60 === 0 ? " hour-end" : "";
+      const lunch = LUNCH.length === 2 && m >= toMin(LUNCH[0]) && m < toMin(LUNCH[1]) ? " lunch" : "";
+      const label = withLabel && m % 60 === 0 ? minToHM(m) : "";
+      s += `<div class="slot${hourEnd}${withLabel ? "" : lunch}">${label}</div>`;
+    }
+    return s;
+  };
+
+  // 3段目：時刻列
+  html += `<div class="col timecol">${slotRows(true)}</div>`;
+
+  // 3段目：日付×工区の各列
+  days.forEach(d => {
+    const ds = ymd(d);
+    areas.forEach((a, ai) => {
+      const cls = (ai === 0 ? " day-start" : "") + (ds === todayStr ? " today" : "");
+      html += `<div class="col${cls}" data-date="${ds}" data-area="${ai}">${slotRows(false)}</div>`;
+    });
+  });
+  wk.innerHTML = html;
+
+  // 予定の帯を置く
+  wk.querySelectorAll(".col[data-date]").forEach(col => {
+    const list = EVENTS
+      .filter(e => e.date === col.dataset.date && areaIndex(e.site) === Number(col.dataset.area))
+      .sort((a, b) => a.sMin - b.sMin || b.eMin - a.eMin);
+    layoutLanes(list).forEach(({ e, lane, lanes }) => {
+      const s = Math.max(e.sMin, tMin), en = Math.min(e.eMin, tMax);
+      if (en <= s) return;                                   // 表示時間外
+      const div = document.createElement("div");
+      div.className = "ev";
+      div.style.top = ((s - tMin) / span * 100) + "%";       // 開始位置
+      div.style.height = ((en - s) / span * 100) + "%";      // 長さ
+      div.style.left = (lane / lanes * 100) + "%";           // 重なったときは横に並べる
+      div.style.width = (100 / lanes) + "%";
+      div.style.background = e.bgColor;
+      div.style.color = e.textColor;
+      div.style.borderLeftColor = e.textColor;
+      // ↓ 帯に出す文字（業者名＋内容）
+      div.innerHTML = (SHOW_TIME_IN_EVENT ? `<div class="tm">${minToHM(e.sMin)}～${minToHM(e.eMin)}</div>` : "")
+                    + `${esc(e.company)}　${esc(e.detail)}`;
+      div.addEventListener("click", () => openModal(e));
+      col.appendChild(div);
+    });
+    // 今日の列に現在時刻の赤線
+    if (col.dataset.date === todayStr){
+      const n = new Date(), nm = n.getHours() * 60 + n.getMinutes();
+      if (nm >= tMin && nm <= tMax){
+        const line = document.createElement("div");
+        line.className = "now";
+        line.style.top = ((nm - tMin) / span * 100) + "%";
+        col.appendChild(line);
+      }
+    }
+  });
+
+  // 期間の表示
+  const last = days[days.length - 1];
+  $("range").textContent = `${mon.getFullYear()}年${mon.getMonth()+1}月${mon.getDate()}日 ～ ${last.getMonth()+1}月${last.getDate()}日`;
+}
+
+/* 時間が重なる予定を、横に並べるための計算 */
+function layoutLanes(list){
+  const out = []; let group = []; let groupEnd = -1;
+  const flush = () => {
+    const laneEnds = [];
+    group.forEach(item => {
+      let l = laneEnds.findIndex(end => end <= item.e.sMin);
+      if (l < 0){ l = laneEnds.length; laneEnds.push(0); }
+      laneEnds[l] = item.e.eMin; item.lane = l;
+    });
+    group.forEach(item => { item.lanes = laneEnds.length; out.push(item); });
+    group = [];
+  };
+  list.forEach(e => {
+    if (group.length && e.sMin >= groupEnd){ flush(); groupEnd = -1; }
+    group.push({ e }); groupEnd = Math.max(groupEnd, e.eMin);
+  });
+  if (group.length) flush();
+  return out;
+}
+
+/* ---------- 月表示（FullCalendar） ----------
+   ※部品が読み込めなかったときも、週表示だけは動くようにしています */
+const HAS_FC = typeof FullCalendar !== "undefined";
+const calendar = !HAS_FC ? { render(){}, updateSize(){}, refetchEvents(){}, today(){}, next(){}, prev(){}, view:{ title:"（月表示を読み込めませんでした）" } }
+ : new FullCalendar.Calendar($("month"), {
   locale: "ja",
   height: "100%",
-  initialView: "timeGridWeek",          // 最初は週表示。月から始めるなら "dayGridMonth"
+  initialView: "dayGridMonth",
+  headerToolbar: false,          // ボタンは上の自作ボタンを使う
   weekends: SHOW_WEEKEND,
-  firstDay: 1,                           // 月曜はじまり
-  headerToolbar: { left:"prev,next today", center:"title", right:"timeGridWeek,dayGridMonth" },
-  buttonText: { today:"今日", week:"週", month:"月" },
-  allDaySlot: false,
-  slotMinTime: "07:00:00",
-  slotMaxTime: "18:00:00",
-  slotDuration: "00:30:00",
-  slotLabelFormat: { hour:"numeric", minute:"2-digit", hour12:false },
-  nowIndicator: true,
-  expandRows: true,
-  eventMaxStack: 3,                      // 週表示：重なりが多いときは「+他◯件」
-  dayMaxEvents: 4,                       // 月表示：1日に出す件数
-  views: {
-    timeGridWeek: { dayHeaderFormat: { month:"numeric", day:"numeric", weekday:"short" } },
-    dayGridMonth: { displayEventEnd: true }
-  },
-  events: loadEvents,
-
-  // 予定の帯に出す文字
-  eventContent: (arg) => {
-    const p = arg.event.extendedProps;
-    const time = `${hm(arg.event.start)}～${arg.event.end ? hm(arg.event.end) : ""}`;
-    if (arg.view.type === "dayGridMonth") {
-      return { html: `<div class="ev">${hm(arg.event.start)}～ ${esc(p.company)}</div>` };
-    }
-    return { html: `<div class="ev"><div class="t">${time}</div><div>${esc(p.company)}</div><div class="d">${esc(p.detail)}</div></div>` };
-  },
-
-  // タップで詳細
-  eventClick: (info) => {
-    const p = info.event.extendedProps;
-    document.getElementById("m-box").style.borderTopColor = p.textColor;
-    document.getElementById("m-title").textContent = p.company;
-    document.getElementById("m-body").innerHTML =
-      `日時：${info.event.start.toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"})}　${hm(info.event.start)}～${info.event.end ? hm(info.event.end) : ""}<br>` +
-      `現場：${esc(p.site)}　区分：${esc(p.kubun)}<br>` +
-      `内容：${esc(p.detail) || "-"}` + (p.note ? `<br>備考：${esc(p.note)}` : "");
-    document.getElementById("modal").style.display = "flex";
-    touched();
-  }
+  firstDay: 1,                   // 月曜はじまり
+  dayMaxEvents: 4,               // 1日に出す件数（超えたら「+他◯件」）
+  events: (info, ok) => ok(EVENTS.map(e => ({
+    start: e.start, end: e.end, title: e.company,
+    backgroundColor: e.bgColor, borderColor: e.textColor, textColor: e.textColor,
+    extendedProps: e
+  }))),
+  // ↓ 月表示の帯に出す文字（開始時刻＋業者名）
+  eventContent: arg => ({ html: `<div style="padding:1px 3px;overflow:hidden">${minToHM(arg.event.extendedProps.sMin)}～ ${esc(arg.event.extendedProps.company)}</div>` }),
+  eventClick: info => openModal(info.event.extendedProps),
 });
-calendar.render();
+let monthRendered = false;
 
-// ポップアップを閉じる
-function closeModal(){ document.getElementById("modal").style.display = "none"; }
-document.getElementById("m-close").addEventListener("click", closeModal);
-document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+/* ---------- 表示の切り替え ---------- */
+function render(){
+  $("b-week").classList.toggle("on", mode === "week");
+  $("b-month").classList.toggle("on", mode === "month");
+  $("week").style.display = mode === "week" ? "grid" : "none";
+  $("month").style.display = mode === "month" ? "block" : "none";
+  if (mode === "week"){
+    renderWeek();
+  } else {
+    if (!monthRendered){ calendar.render(); monthRendered = true; }
+    calendar.updateSize();
+    calendar.refetchEvents();
+    $("range").textContent = calendar.view.title;
+  }
+}
 
-// しばらく触られなければ、今日の週表示に戻す
-let idleTimer;
+/* ---------- ボタンの動き ---------- */
+function move(step){
+  if (mode === "week"){ baseDate.setDate(baseDate.getDate() + step * 7); }
+  else { step > 0 ? calendar.next() : calendar.prev(); }
+  render();
+}
+$("b-prev").addEventListener("click", () => move(-1));
+$("b-next").addEventListener("click", () => move(1));
+$("b-today").addEventListener("click", () => { baseDate = new Date(); calendar.today(); render(); });
+$("b-week").addEventListener("click", () => { mode = "week"; render(); });
+$("b-month").addEventListener("click", () => { mode = "month"; render(); });
+
+/* ---------- 詳細ポップアップ ---------- */
+function openModal(e){
+  const d = new Date(e.date + "T00:00");
+  $("m-box").style.borderTopColor = e.textColor;
+  $("m-title").textContent = e.company;
+  $("m-body").innerHTML =
+    `日時：${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})　${minToHM(e.sMin)}～${minToHM(e.eMin)}<br>` +
+    `現場：${esc(e.site)}　区分：${esc(e.kubun)}<br>` +
+    `内容：${esc(e.detail) || "-"}` + (e.note ? `<br>備考：${esc(e.note)}` : "");
+  $("modal").style.display = "flex";
+}
+function closeModal(){ $("modal").style.display = "none"; }
+$("m-close").addEventListener("click", closeModal);
+$("modal").addEventListener("click", ev => { if (ev.target.id === "modal") closeModal(); });
+
+/* ---------- しばらく触られなければ、今週の週表示に戻す ---------- */
+let idle;
 function touched(){
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {
-    closeModal();
-    calendar.changeView("timeGridWeek");
-    calendar.today();
-  }, BACK_TO_TODAY_MIN * 60 * 1000);
+  clearTimeout(idle);
+  idle = setTimeout(() => { closeModal(); mode = "week"; baseDate = new Date(); calendar.today(); render(); },
+                    BACK_TO_TODAY_MIN * 60 * 1000);
 }
 document.addEventListener("pointerdown", touched);
 touched();
 
-setInterval(() => calendar.refetchEvents(), REFRESH_MINUTES * 60 * 1000);
+/* ---------- 自動更新 ---------- */
+loadData();
+setInterval(loadData, REFRESH_MINUTES * 60 * 1000);
 setTimeout(() => location.reload(), PAGE_RELOAD_HOURS * 60 * 60 * 1000);
 </script>
 </body>

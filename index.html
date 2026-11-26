@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>現場カレンダー</title>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales-all.global.min.js"></script>
+<style>
+  html, body { margin:0; height:100%; font-family:"Meiryo","Hiragino Sans",sans-serif; background:#f4f6f8; }
+  #wrap { display:flex; flex-direction:column; height:100vh; padding:12px; box-sizing:border-box; }
+  #header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  #header h1 { margin:0; font-size:28px; color:#1f3a5f; }
+  #updated { font-size:16px; color:#555; }
+  #calendar { flex:1; background:#fff; border-radius:8px; padding:8px; }
+  /* タッチ操作向けに大きめ */
+  .fc .fc-button { font-size:20px; padding:8px 18px; }
+  .fc .fc-toolbar-title { font-size:30px; }
+  .fc .fc-daygrid-day-number { font-size:18px; }
+  .fc .fc-event { font-size:16px; padding:2px 4px; cursor:pointer; }
+  .fc .fc-day-sun .fc-daygrid-day-number, .fc .fc-col-header-cell.fc-day-sun { color:#d33; }
+  .fc .fc-day-sat .fc-daygrid-day-number, .fc .fc-col-header-cell.fc-day-sat { color:#2468c8; }
+  /* 詳細ポップアップ */
+  #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); align-items:center; justify-content:center; z-index:999; }
+  #modal .box { background:#fff; border-radius:12px; padding:28px 36px; min-width:420px; font-size:22px; line-height:1.8; }
+  #modal .box h2 { margin:0 0 12px; font-size:26px; }
+  #modal button { margin-top:16px; font-size:22px; padding:10px 30px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="header">
+    <h1>現場カレンダー</h1>
+    <div id="updated"></div>
+  </div>
+  <div id="calendar"></div>
+</div>
+
+<div id="modal" onclick="closeModal()">
+  <div class="box" onclick="event.stopPropagation()">
+    <h2 id="m-title"></h2>
+    <div id="m-body"></div>
+    <button onclick="closeModal()">閉じる</button>
+  </div>
+</div>
+
+<script>
+// ===== 設定 =====
+const DATA_URL = "data/events.json";
+const REFRESH_MINUTES = 5;        // 何分ごとにデータを読み直すか
+const PAGE_RELOAD_HOURS = 6;      // 画面ごと再読み込み（固まり防止）
+
+// 現場名ごとの色（未登録は自動で割り当て）
+const COLORS = ["#2e86de","#e67e22","#27ae60","#8e44ad","#c0392b","#16a085","#d35400","#2c3e50"];
+const colorMap = {};
+function colorOf(key){
+  if(!key) return "#7f8c8d";
+  if(!colorMap[key]) colorMap[key] = COLORS[Object.keys(colorMap).length % COLORS.length];
+  return colorMap[key];
+}
+
+async function loadEvents(info, success, failure){
+  try{
+    const res = await fetch(DATA_URL + "?t=" + Date.now(), {cache:"no-store"});
+    const data = await res.json();
+    document.getElementById("updated").textContent = "最終更新：" + (data.updated || "-");
+    success(data.events.map(e => ({
+      title: e.title,
+      start: e.start,
+      end: e.end,           // 終日イベントの end は「翌日」（変換スクリプト側で調整済み）
+      allDay: true,
+      color: colorOf(e.site),
+      extendedProps: e
+    })));
+  }catch(err){
+    console.error(err);
+    failure(err);
+  }
+}
+
+const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+  initialView: "dayGridMonth",
+  locale: "ja",
+  height: "100%",
+  headerToolbar: { left:"prev", center:"title", right:"today next" },
+  buttonText: { today:"今月" },
+  dayMaxEvents: 4,                 // 多い日は「+他◯件」
+  events: loadEvents,
+  eventClick: (info) => {
+    const p = info.event.extendedProps;
+    document.getElementById("m-title").textContent = info.event.title;
+    document.getElementById("m-body").innerHTML =
+      `期間：${p.start}${p.end_display && p.end_display !== p.start ? " ～ " + p.end_display : ""}<br>` +
+      `現場：${p.site || "-"}<br>` +
+      `業者：${p.company || "-"}<br>` +
+      `内容：${p.detail || "-"}`;
+    document.getElementById("modal").style.display = "flex";
+  }
+});
+calendar.render();
+
+function closeModal(){ document.getElementById("modal").style.display = "none"; }
+
+// 定期更新
+setInterval(() => calendar.refetchEvents(), REFRESH_MINUTES * 60 * 1000);
+setTimeout(() => location.reload(), PAGE_RELOAD_HOURS * 60 * 60 * 1000);
+// 詳細を開きっぱなしにしない（60秒で自動クローズ）
+setInterval(closeModal, 60 * 1000);
+</script>
+</body>
+</html>

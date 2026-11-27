@@ -1,5 +1,5 @@
 {
-  "updated": "2026/11/27 11:04",
+  "updated": "2026/11/27 12:07",
   "slotMin": "08:00:00",
   "slotMax": "17:00:00",
   "sites": [
@@ -24,174 +24,6 @@
   ],
   "events": [
     {
-      "start": "2026-10-15T08:00",
-      "end": "2026-10-15T09:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "小俣組",
-      "detail": "",
-      "note": "",
-      "no": "A-0001",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-16T08:00",
-      "end": "2026-10-16T09:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "小俣組",
-      "detail": "",
-      "note": "",
-      "no": "A-0002",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-15T10:00",
-      "end": "2026-10-15T11:00",
-      "site": "風水害",
-      "kubun": "搬入出",
-      "company": "小俣組",
-      "detail": "",
-      "note": "仮囲",
-      "no": "B-0001",
-      "textColor": "#007635",
-      "bgColor": "#ECF5E7"
-    },
-    {
-      "start": "2026-10-16T08:30",
-      "end": "2026-10-16T17:00",
-      "site": "風水害",
-      "kubun": "搬入出",
-      "company": "中央興業",
-      "detail": "",
-      "note": "",
-      "no": "B-0002",
-      "textColor": "#007635",
-      "bgColor": "#ECF5E7"
-    },
-    {
-      "start": "2026-10-19T08:30",
-      "end": "2026-10-19T17:00",
-      "site": "風水害",
-      "kubun": "搬入出",
-      "company": "中央興業",
-      "detail": "",
-      "note": "",
-      "no": "B-0003",
-      "textColor": "#007635",
-      "bgColor": "#ECF5E7"
-    },
-    {
-      "start": "2026-10-20T08:30",
-      "end": "2026-10-20T16:30",
-      "site": "風水害",
-      "kubun": "搬入出",
-      "company": "中央興業",
-      "detail": "",
-      "note": "",
-      "no": "B-0004",
-      "textColor": "#007635",
-      "bgColor": "#ECF5E7"
-    },
-    {
-      "start": "2026-10-20T08:30",
-      "end": "2026-10-20T17:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "エスアンドシー",
-      "detail": "",
-      "note": "",
-      "no": "A-0003",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-22T09:00",
-      "end": "2026-10-22T10:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "新興電設工業株式会社",
-      "detail": "",
-      "note": "",
-      "no": "A-0004",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-21T08:30",
-      "end": "2026-10-21T17:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "エスアンドシー建設",
-      "detail": "",
-      "note": "",
-      "no": "A-0005",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-21T07:30",
-      "end": "2026-10-21T17:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "エスアンドシー建設",
-      "detail": "",
-      "note": "",
-      "no": "A-0006",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-21T08:30",
-      "end": "2026-10-21T17:00",
-      "site": "風水害",
-      "kubun": "搬入出",
-      "company": "中央興業",
-      "detail": "",
-      "note": "",
-      "no": "B-0005",
-      "textColor": "#007635",
-      "bgColor": "#ECF5E7"
-    },
-    {
-      "start": "2026-10-22T08:30",
-      "end": "2026-10-22T17:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "エスアンドシー建設",
-      "detail": "",
-      "note": "",
-      "no": "A-0007",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-22T08:30",
-      "end": "2026-10-22T17:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "エスアンドシー建設",
-      "detail": "",
-      "note": "",
-      "no": "",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
-      "start": "2026-10-26T13:00",
-      "end": "2026-10-26T14:00",
-      "site": "高層塔",
-      "kubun": "搬入出",
-      "company": "小俣組",
-      "detail": "",
-      "note": "",
-      "no": "A-0008",
-      "textColor": "#C00000",
-      "bgColor": "#FDE9E9"
-    },
-    {
       "start": "2026-10-27T09:00",
       "end": "2026-10-27T10:00",
       "site": "風水害",
@@ -199,7 +31,7 @@
       "company": "中央興業",
       "detail": "",
       "note": "",
-      "no": "B-0006",
+      "no": "C-0001",
       "textColor": "#007635",
       "bgColor": "#ECF5E7"
     },
@@ -211,7 +43,7 @@
       "company": "中央興業",
       "detail": "",
       "note": "",
-      "no": "B-0007",
+      "no": "C-0002",
       "textColor": "#007635",
       "bgColor": "#ECF5E7"
     },
@@ -223,7 +55,7 @@
       "company": "中央興業",
       "detail": "",
       "note": "",
-      "no": "B-0008",
+      "no": "C-0003",
       "textColor": "#007635",
       "bgColor": "#ECF5E7"
     },
@@ -235,7 +67,7 @@
       "company": "㈱モリヤ総合設備",
       "detail": "",
       "note": "",
-      "no": "A-0009",
+      "no": "A-0001",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -247,7 +79,7 @@
       "company": "新興電設工業㈱",
       "detail": "",
       "note": "",
-      "no": "A-0009",
+      "no": "A-0002",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -259,7 +91,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "",
-      "no": "A-0010",
+      "no": "A-0003",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -271,7 +103,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "",
-      "no": "",
+      "no": "A-0004",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -283,7 +115,7 @@
       "company": "小俣組",
       "detail": "",
       "note": "終日",
-      "no": "B-0011",
+      "no": "B-0001",
       "textColor": "#0065B0",
       "bgColor": "#EAF3FA"
     },
@@ -295,7 +127,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "午前",
-      "no": "A-0011",
+      "no": "A-0005",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -307,7 +139,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "午前",
-      "no": "A-0012",
+      "no": "A-0006",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -319,7 +151,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "午後",
-      "no": "A-0013",
+      "no": "A-0007",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -331,7 +163,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "",
-      "no": "A-0014",
+      "no": "A-0008",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -343,7 +175,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "午前",
-      "no": "A-0015",
+      "no": "A-0009",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -355,7 +187,7 @@
       "company": "太陽建機",
       "detail": "",
       "note": "午後",
-      "no": "C-0001",
+      "no": "C-0004",
       "textColor": "#007635",
       "bgColor": "#ECF5E7"
     },
@@ -367,7 +199,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "午前",
-      "no": "A-0017",
+      "no": "A-0010",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     },
@@ -379,7 +211,7 @@
       "company": "㈱中央興業",
       "detail": "",
       "note": "終日",
-      "no": "B-0012",
+      "no": "B-0002",
       "textColor": "#0065B0",
       "bgColor": "#EAF3FA"
     },
@@ -391,7 +223,7 @@
       "company": "新興電設工業",
       "detail": "",
       "note": "午前",
-      "no": "A-0018",
+      "no": "A-0011",
       "textColor": "#C00000",
       "bgColor": "#FDE9E9"
     }
